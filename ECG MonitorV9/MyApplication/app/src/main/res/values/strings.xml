@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">My Application</string>
+    <string-array name="Patient">
+        <item>Patient 1</item>
+        <item>Patient 2</item>
+        <item>Patient 3</item>
+    </string-array>
+</resources>
