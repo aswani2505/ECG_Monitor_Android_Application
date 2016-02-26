@@ -1,5 +1,10 @@
 package com.example.tommy.myapplication;
 
+import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -14,7 +19,7 @@ import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SensorEventListener{
 
     boolean isRunning = false;
     boolean isWindowOpen = true;
@@ -25,6 +30,10 @@ public class MainActivity extends AppCompatActivity {
     private TextView OurMessage;
     private TextView OurMessage1;
     private TextView OurMessage2;
+    private SensorManager manager;
+    private Sensor accelerometer;
+    private float[] x,y,z;
+    private int index = 0;
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -37,35 +46,28 @@ public class MainActivity extends AppCompatActivity {
         setTitle("ECG Monitor");
         setContentView(R.layout.activity_main);
 
+        manager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        accelerometer = manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        manager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+
         addItemsOnListener();
         addListenerOnSpinner();
 
-
-        // Patient data
         patient[0] = new Patient("Alex Abner", 1234, 40, "Male");
-        float[] ecgData1 = {40, 75, 50, 50, 50, 50, 50, 140, 40, 75, 50, 50, 50, 50, 50, 140, 40, 75, 50, 50, 50, 50, 50, 140};
-        patient[0].setECGValues(ecgData1);
-//        patient[0].setAge(40);
-//        patient[0].setName("Alex Abner");
+        float[] ecgData = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        patient[0].setECGValues(ecgData);
 
         patient[1] = new Patient("Bartholomew Bosley", 5678, 65, "Male");
-        float[] ecgData2 = {30, 29, 128, 21, 36, 33, 31, 30, 30, 29, 128, 21, 36, 33, 31, 30, 30, 29, 128, 21, 36, 33, 31, 30};
-        patient[1].setECGValues(ecgData2);
-//        patient[1].setAge(65);
-//        patient[1].setName("Bartholomew Bosley");
+        patient[1].setECGValues(ecgData);
 
         patient[2] = new Patient("Catherine Cooper", 9101, 27, "Female");
-        float[] ecgData3 = {150, 20, 59, 54, 53, 53, 53, 53, 50, 148, 22, 59, 54, 53, 53, 53, 53, 50, 150, 20, 61, 54, 53, 53, 53, 53, 50};
-        patient[2].setECGValues((ecgData3));
-//        patient[2].setAge(27);
-//        patient[2].setName("Catherine Cooper");
-        ///////////////
+        patient[2].setECGValues(ecgData);
 
-
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
+
+    // ATTENTION: This was auto-generated to implement the App Indexing API.
+    // See https://g.co/AppIndexing/AndroidStudio for more information.
 
     private void addListenerOnSpinner() {
         spinner = (Spinner) findViewById(R.id.spinner);
@@ -99,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        manager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 
         isWindowOpen = true;
         final float[] extremes = {0, 150};  // Values used to calibrate graph.
@@ -180,6 +183,9 @@ public class MainActivity extends AppCompatActivity {
                 OurMessage1.setText(patient[value].getName());
                 OurMessage2 = (TextView) findViewById(R.id.textView3);  // gender
                 OurMessage2.setText(patient[value].getGender());
+
+//                Intent intent = new Intent(MainActivity.this, acclService.class);
+//                startService(intent);
             }
         });
 
@@ -189,6 +195,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         isWindowOpen = false;
+        manager.unregisterListener(this);
     }
 
     @Override
@@ -230,4 +237,26 @@ public class MainActivity extends AppCompatActivity {
         AppIndex.AppIndexApi.end(client, viewAction);
         client.disconnect();
     }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        index++;
+        Sensor mySensor = event.sensor;
+
+        if (mySensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            x[index] = event.values[0];
+            y[index] = event.values[1];
+            z[index] = event.values[2];
+
+        }
+        patient[0].setECGValues(x);
+        patient[1].setECGValues(y);
+        patient[2].setECGValues(z);
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
 }
+

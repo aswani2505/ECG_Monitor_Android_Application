@@ -21,6 +21,7 @@ public class Patient {
         return;
     }
 
+
     void setData(String Name, int IDNum, int Age, String Gender) {
         this.name = Name;
         this.ID = IDNum;
